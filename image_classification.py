@@ -72,7 +72,7 @@ train, validation = utils.image_dataset_from_directory(
     subset = 'both',
 )
 
-tf.image.adjust_saturation(train, 5, name = None)
+
 
 # print("Class names:")
 # print(train.class_names)
@@ -84,8 +84,14 @@ validation = validation.cache().prefetch(buffer_size = data.AUTOTUNE)
 #is helpful when stride is 1
 # VERSION 1: Class-based model
 
+train = train.map(lambda x, y: (image.adjust_saturation(x, 5, name = None),y))
+train = train.map(lambda x, y: (image.adjust_contrast(x, 5),y))
 hflip = train.map(lambda x, y: (image.flip_left_right(x), y))
 train = train.concatenate(hflip)
+
+validation = validation.map(lambda x,y: (image.adjust_saturation(x,5, name=None),y))
+vprocessed = validation.map(lambda x, y: (image.adjust_contrast(x,5),y))
+validation = validation.concatenate(vprocessed)
 
 #BRIGHTNESS AND HUE IF YA WANT BUT I THINK HUE WILL MESS UP THE SANDSTORM
 
@@ -103,11 +109,11 @@ class Model:
                 strides=3, 
                 activation=activations.relu, 
                 input_shape=input_size,
-                kernel_regularizer=tf.keras.regularizers.L2(),
+                #kernel_regularizer=tf.keras.regularizers.L2(),
         )) 
         # Size: 75 x 75 x 12
         
-        self.model.add(layers.BatchNormalization()) # whats going on
+        #self.model.add(layers.BatchNormalization()) # whats going on
 
         self.model.add(layers.MaxPool2D(
                 pool_size=3,
@@ -120,10 +126,10 @@ class Model:
                 3,
                 strides=1, # used to be a stride of 2
                 activation=activations.relu,
-                kernel_regularizer=tf.keras.regularizers.L2(),
+                #kernel_regularizer=tf.keras.regularizers.L2(),
         ))
         # Size: 35 x 35 x 16
-        self.model.add(layers.BatchNormalization())
+        #self.model.add(layers.BatchNormalization())
 
         self.model.add(layers.MaxPool2D(
                 pool_size=3,
@@ -136,10 +142,10 @@ class Model:
                 3,
                 strides=1, # used to be a stride of 2
                 activation=activations.relu,
-                kernel_regularizer=tf.keras.regularizers.L2(),
+                #kernel_regularizer=tf.keras.regularizers.L2(),
         ))
         # Size: 15 x 15 x 16
-        self.model.add(layers.BatchNormalization()) 
+        #self.model.add(layers.BatchNormalization()) 
 
         self.model.add(layers.MaxPool2D(
                 pool_size=3,
@@ -153,10 +159,10 @@ class Model:
                 3,
                 strides=1, # used to be a stride of 2
                 activation=activations.relu,
-                kernel_regularizer=tf.keras.regularizers.L2(),
+                #kernel_regularizer=tf.keras.regularizers.L2(),
         ))
         # Size: 
-        self.model.add(layers.BatchNormalization())
+        #self.model.add(layers.BatchNormalization())
 
         self.model.add(layers.MaxPool2D(
                 pool_size=3,
@@ -166,7 +172,7 @@ class Model:
         #regularizers (like patrick did)
         #conv with size 3 and some padding maybe
 
-        self.model.add(layers.BatchNormalization())
+        #self.model.add(layers.BatchNormalization())
 
 
         self.model.add(layers.Flatten())
@@ -187,7 +193,7 @@ class Model:
             decay_rate=0.1,
         )
 
-        self.optimizer = optimizers.Nadam(learning_rate=0.00001)
+        self.optimizer = optimizers.Nadam(learning_rate=0.00003)
         self.loss = losses.CategoricalCrossentropy()
         self.model.compile(
                 loss = self.loss, 
