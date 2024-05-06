@@ -21,16 +21,32 @@ df_train = pd.read_csv('features_30_sec.csv', names = ["filename", "length",
          "mfcc17_mean", "mfcc17_var", "mfcc18_mean", "mfcc18_var", "mfcc19_mean", "mfcc19_var", "mfcc20_mean", 
          "mfcc20_var", "label"
          ])
+
 df_train.pop("filename")
 df_train.pop("length")
+print(df_train.dtypes)
 df_train = df_train.iloc[1:]
 df_features = df_train.copy()
 df_labels = df_features.pop('label')
 print(df_train.head()) # just for funsies
 
 df_features = np.array(df_features)
+df_features = df_features.astype(np.float64) # probably where the error occured
 print(df_features)
 
+df_model = tf.keras.Sequential([
+  layers.Dense(64, activation='relu'),
+  layers.Dense(1)
+])
+
+df_model.compile(loss = tf.keras.losses.MeanSquaredError(),
+                      optimizer = tf.keras.optimizers.Adam())
+
+df_model.fit(
+    df_features,
+    df_labels,
+    epochs = 10,
+)
 # names = [
 #         "chroma_stft_mean", "chroma_stft_var", "rms_mean",	"rms_var", "spectral_centroid_mean", 
 #          "spectral_centroid_var", "spectral_bandwidth_mean", "spectral_bandwidth_var", "rolloff_mean", 
