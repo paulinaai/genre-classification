@@ -21,8 +21,8 @@ music_features = music_train.copy()
 music_labels = music_features.pop("label")
 
 music_model = tf.keras.Sequential([
-  layers.Dense(64, activation='relu'),
-  layers.Dense(1)
+  tf.keras.layers.Input(shape=(1,)),
+  layers.Dense(57)
 ])
 
 music_model.compile(loss = tf.keras.losses.MeanSquaredError(),
