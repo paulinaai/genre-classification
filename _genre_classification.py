@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.keras.utils as utils
 import tensorflow.keras.layers as layers
+import tensorflow.keras.activations as activations
 import tensorflow.keras.optimizers as optimizers
 import tensorflow.keras.losses as losses
 from tensorflow.keras import Sequential
@@ -12,20 +13,8 @@ from sklearn.model_selection import train_test_split
 
 VALIDATION_SPLIT = 0.3
 
-
 df_train = pd.read_csv('features_30_sec.csv', skipinitialspace=True, converters = {'filename': str, 'label': str})
-# names = ["filename", "length",
-#         "chroma_stft_mean", "chroma_stft_var", "rms_mean",	"rms_var", "spectral_centroid_mean", 
-#          "spectral_centroid_var", "spectral_bandwidth_mean", "spectral_bandwidth_var", "rolloff_mean", 
-#          "rolloff_var", "zero_crossing_rate_mean", "zero_crossing_rate_var", "harmony_mean", "harmony_var", 
-#          "perceptr_mean", "perceptr_var", "tempo", "mfcc1_mean", "mfcc1_var", "mfcc2_mean", "mfcc2_var", 
-#          "mfcc3_mean", "mfcc3_var", "mfcc4_mean", "mfcc4_var", "mfcc5_mean", "mfcc5_var", "mfcc6_mean", 
-#          "mfcc6_var", "mfcc7_mean", "mfcc7_var", "mfcc8_mean", "mfcc8_var", "mfcc9_mean", "mfcc9_var", 
-#          "mfcc10_mean", "mfcc10_var", "mfcc11_mean", "mfcc11_var", "mfcc12_mean", "mfcc12_var", "mfcc13_mean", 
-#          "mfcc13_var", "mfcc14_mean", "mfcc14_var", "mfcc15_mean", "mfcc15_var", "mfcc16_mean", "mfcc16_var", 
-#          "mfcc17_mean", "mfcc17_var", "mfcc18_mean", "mfcc18_var", "mfcc19_mean", "mfcc19_var", "mfcc20_mean", 
-#          "mfcc20_var", "label"
-#          ]
+
 df_train.pop("filename")
 df_train.pop("length")
 print(df_train.dtypes)
@@ -61,37 +50,34 @@ for x in df_labels:
         labels.append(10.0)
 
 labels = pd.Series(labels)
+print(labels) # these are the labels for the music
 
-X_train, X_val_and_test, Y_train, Y_val_and_test = train_test_split(df_features, labels, test_size=VALIDATION_SPLIT)
-X_val, X_test, Y_val, Y_test = train_test_split(X_val_and_test, Y_val_and_test, test_size=0.5)
-print("x:")
-print(X_train)
+X_train, X_val, Y_train, Y_val = train_test_split(df_features, labels, test_size=VALIDATION_SPLIT)
+#X_val, X_test, Y_val, Y_test = train_test_split(X_val_and_test, Y_val_and_test, test_size=0.5)
+
 X_train = np.asarray(X_train).astype(np.float32)
 Y_train = np.asarray(Y_train).astype(np.float32)
 
-inputs = keras.Input(shape=(31,))
+#inputs = keras.Input(shape=(31,))
 
 print("x_train:")
 print(X_train)
-X_train=tf.convert_to_tensor(X_train) 
+X_train = tf.convert_to_tensor(X_train) 
+Y_val = tf.one_hot(Y_val, 10)
 
-Y_val = tf.convert_to_tensor(Y_val)
 X_val = tf.convert_to_tensor(X_val)
 
-print("y:")
+print("y_train:")
+Y_train = tf.one_hot(Y_train, 10)
 print(Y_train)
-Y_train = tf.convert_to_tensor(Y_train)
 
-# df_features = np.array(df_features)
 
-# for c in df_features:
-#   df_features[c] = df_features[c].astype(np.float32) # probably where the error occured
-# print(df_features)
-
-df_model = tf.keras.Sequential([
-  layers.Dense(1),
-])
-
+df_model = tf.keras.Sequential()
+#df_model.add()
+df_model.add(layers.Dense(60, activation=activations.relu))
+df_model.add(layers.Dense(20, activation=activations.relu))
+df_model.add(layers.Dense(15, activation=activations.relu))
+df_model.add(layers.Dense(10, activation=activations.sigmoid))
 optimizer = optimizers.legacy.Adam(learning_rate = 0.00001) #0.00001
 loss = losses.CategoricalCrossentropy()
 
@@ -101,8 +87,6 @@ df_model.compile(
     metrics = ['accuracy'],
 )
 
-
-
 # res = df_model.fit(dataset, epochs = 5)
 df_model.fit(
     X_train,
@@ -111,6 +95,12 @@ df_model.fit(
     epochs = 50,
     validation_data = (X_val, Y_val),
 )
+
+# df_features = np.array(df_features)
+
+# for c in df_features:
+#   df_features[c] = df_features[c].astype(np.float32) # probably where the error occured
+# print(df_features)
 
 # make a function that makes a row from a dataframe into  a tuple with the first item being the entire row except for the last item and the second item being the last item in the row's data
 # def dfToTuple(row): # row = row from dataframe (since we r mapping somehow..) (is the dtype of row a df?)
@@ -167,3 +157,17 @@ df_model.fit(
 
 # for x in dataset:
 #     print(x)
+
+
+# names = ["filename", "length",
+#         "chroma_stft_mean", "chroma_stft_var", "rms_mean",	"rms_var", "spectral_centroid_mean", 
+#          "spectral_centroid_var", "spectral_bandwidth_mean", "spectral_bandwidth_var", "rolloff_mean", 
+#          "rolloff_var", "zero_crossing_rate_mean", "zero_crossing_rate_var", "harmony_mean", "harmony_var", 
+#          "perceptr_mean", "perceptr_var", "tempo", "mfcc1_mean", "mfcc1_var", "mfcc2_mean", "mfcc2_var", 
+#          "mfcc3_mean", "mfcc3_var", "mfcc4_mean", "mfcc4_var", "mfcc5_mean", "mfcc5_var", "mfcc6_mean", 
+#          "mfcc6_var", "mfcc7_mean", "mfcc7_var", "mfcc8_mean", "mfcc8_var", "mfcc9_mean", "mfcc9_var", 
+#          "mfcc10_mean", "mfcc10_var", "mfcc11_mean", "mfcc11_var", "mfcc12_mean", "mfcc12_var", "mfcc13_mean", 
+#          "mfcc13_var", "mfcc14_mean", "mfcc14_var", "mfcc15_mean", "mfcc15_var", "mfcc16_mean", "mfcc16_var", 
+#          "mfcc17_mean", "mfcc17_var", "mfcc18_mean", "mfcc18_var", "mfcc19_mean", "mfcc19_var", "mfcc20_mean", 
+#          "mfcc20_var", "label"
+#          ]
